@@ -3,117 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Python IDE</title>
+    <title>Python Premium IDE</title>
     
+    <!-- Premium Fonts: Inter for UI, JetBrains Mono for Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Monaco & Pyodide -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { display: flex; flex-direction: column; height: 100vh; background-color: #121212; color: #fff; overflow: hidden; }
+        :root {
+            --bg-main: #0F111A;
+            --bg-panel: #1A1D27;
+            --border-color: #2E3245;
+            --accent-blue: #3B82F6;
+            --accent-green: #10B981;
+            --text-main: #E2E8F0;
+            --text-muted: #94A3B8;
+        }
 
-        /* App Bar */
-        .app-bar { background-color: #1E1E1E; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.4); z-index: 20; position: relative; }
-        .app-title { display: flex; align-items: center; gap: 15px; font-size: 18px; font-weight: 500; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        .menu-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sleek Header --- */
+        .header {
+            background-color: var(--bg-panel);
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-btn {
+            background: none; border: none; color: var(--text-main);
+            font-size: 24px; cursor: pointer; padding: 5px;
+        }
+
+        .btn-run {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            height: 34px;
+            padding: 0 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-run:hover:not(:disabled) { background-color: var(--accent-green); color: #fff; }
+        .btn-run:disabled { background-color: transparent; border-color: var(--text-muted); color: var(--text-muted); cursor: not-allowed; }
+
+        /* --- Sidebar & Overlay --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; display: none; backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
         
-        .btn-run { background-color: #00E676; color: #000; border: none; height: 36px; padding: 0 16px; border-radius: 18px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,230,118,0.3); }
-        .btn-run:disabled { background-color: #333; color: #888; box-shadow: none; }
+        .sidebar {
+            position: fixed; left: -280px; top: 55px; width: 280px; height: calc(100vh - 55px);
+            background-color: var(--bg-panel); z-index: 16; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; border-right: 1px solid var(--border-color);
+        }
+        .sidebar.active { left: 0; }
 
-        /* Sidebar (Drawer) */
-        .sidebar { position: fixed; left: -280px; top: 56px; width: 280px; height: calc(100vh - 56px); background-color: #1A1A1A; z-index: 15; transition: 0.3s ease; display: flex; flex-direction: column; border-right: 1px solid #333; }
-        .sidebar.open { left: 0; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 14; display: none; top: 56px; }
-        .overlay.open { display: block; }
+        .section-header {
+            padding: 16px; font-size: 11px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
 
-        /* File Explorer */
-        .sidebar-section { padding: 15px; border-bottom: 1px solid #333; }
-        .section-title { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .add-file-btn { background: none; border: none; color: #00B0FF; font-size: 16px; cursor: pointer; }
+        .btn-add { background: none; border: none; color: var(--accent-blue); cursor: pointer; font-weight: 600; font-size: 12px; }
         
-        .file-list { list-style: none; }
-        .file-item { padding: 8px 10px; border-radius: 6px; margin-bottom: 5px; cursor: pointer; color: #ccc; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .file-item:hover { background-color: #2A2A2A; }
-        .file-item.active { background-color: #00B0FF22; color: #00B0FF; border-left: 3px solid #00B0FF; }
+        .file-list { list-style: none; padding: 10px; overflow-y: auto; flex: 1; }
+        .file-item {
+            padding: 10px 12px; border-radius: 6px; margin-bottom: 4px; font-size: 14px;
+            color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .file-item:hover { background-color: rgba(255,255,255,0.05); }
+        .file-item.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-weight: 500; }
 
-        /* GitHub Sync Area */
-        .gh-input { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff; font-size: 13px; outline: none; }
-        .gh-input:focus { border-color: #00B0FF; }
-        .btn-sync { width: 100%; background: #238636; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 5px; }
-        .btn-sync:hover { background: #2ea043; }
+        /* GitHub Sync Box */
+        .gh-box { padding: 16px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
+        .gh-input {
+            width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;
+            border: 1px solid var(--border-color); background: var(--bg-main);
+            color: white; font-size: 13px; font-family: 'Inter'; outline: none;
+        }
+        .gh-input:focus { border-color: var(--accent-blue); }
+        .btn-sync {
+            width: 100%; background: var(--text-main); color: var(--bg-main);
+            border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer;
+        }
 
-        /* Editor & Console */
-        .main-area { flex: 1; display: flex; flex-direction: column; position: relative; }
-        #editor-container { flex: 1; width: 100%; background-color: #121212; padding-top: 5px; }
-        .file-tabs { display: flex; background: #1E1E1E; padding: 5px 10px 0; gap: 5px; border-bottom: 1px solid #333; overflow-x: auto; }
-        .tab { padding: 8px 15px; background: #2D2D2D; border-radius: 6px 6px 0 0; font-size: 13px; color: #aaa; cursor: pointer; white-space: nowrap; }
-        .tab.active { background: #121212; color: #fff; border-top: 2px solid #00B0FF; }
-
-        .console-wrapper { height: 35%; display: flex; flex-direction: column; background-color: #000; border-top: 1px solid #333; }
-        .console-header { background-color: #1E1E1E; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid #222; }
-        #terminal-output { flex: 1; padding: 12px 16px; overflow-y: auto; font-family: monospace; font-size: 13px; color: #E0E0E0; white-space: pre-wrap; word-wrap: break-word; }
+        /* --- Editor Area --- */
+        .main-workspace { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
         
-        .text-sys { color: #00B0FF; }
-        .text-err { color: #FF5252; }
-        .text-succ { color: #00E676; }
+        .tabs-container {
+            display: flex; background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color); overflow-x: auto;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        
+        .tab {
+            padding: 12px 20px; font-size: 13px; color: var(--text-muted);
+            cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+            display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace;
+        }
+        .tab.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background-color: var(--bg-main); }
+        
+        #editor-container { flex: 1; width: 100%; background-color: var(--bg-main); }
+
+        /* --- Terminal / Console --- */
+        .terminal-container {
+            height: 35%; display: flex; flex-direction: column;
+            background-color: #090A10; border-top: 1px solid var(--border-color);
+        }
+        .terminal-header {
+            padding: 8px 16px; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .term-title { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; }
+        .btn-clear { background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; }
+        
+        #terminal-output {
+            flex: 1; padding: 12px 16px; overflow-y: auto; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.6; color: #A6ACCD; white-space: pre-wrap; word-wrap: break-word;
+        }
+        .text-sys { color: var(--accent-blue); }
+        .text-err { color: #F07178; }
+        .text-succ { color: #C3E88D; }
+        .text-out { color: #FFFFFF; }
     </style>
 </head>
 <body>
 
     <!-- Header -->
-    <header class="app-bar">
-        <div class="app-title">
-            <button class="menu-btn" onclick="toggleMenu()">☰</button>
-            <span>Python Pro</span>
+    <header class="header">
+        <div class="brand">
+            <button class="menu-btn" onclick="toggleMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <span>Python Pro IDE</span>
         </div>
-        <button id="runBtn" class="btn-run" onclick="runCode()" disabled>⏳ Loading...</button>
+        <button id="runBtn" class="btn-run" onclick="runCode()" disabled>
+            ⏳ Loading Engine...
+        </button>
     </header>
 
     <!-- Sidebar & Overlay -->
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
     <div class="sidebar" id="sidebar">
-        <!-- File Explorer -->
-        <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
-            <div class="section-title">
-                <span>Explorer</span>
-                <button class="add-file-btn" onclick="addNewFile()">+ Add</button>
-            </div>
-            <ul class="file-list" id="fileList"></ul>
+        <div class="section-header">
+            <span>Explorer</span>
+            <button class="btn-add" onclick="addNewFile()">+ NEW FILE</button>
         </div>
+        <ul class="file-list" id="fileList"></ul>
 
-        <!-- GitHub Integration -->
-        <div class="sidebar-section">
-            <div class="section-title">☁️ GitHub Sync</div>
-            <input type="text" id="gh-owner" class="gh-input" placeholder="GitHub Username (e.g. Romilchavda)">
-            <input type="text" id="gh-repo" class="gh-input" placeholder="Repo Name (e.g. my-project)">
-            <input type="password" id="gh-token" class="gh-input" placeholder="Personal Access Token (PAT)">
-            <button class="btn-sync" onclick="pushToGitHub()">🚀 Push to GitHub</button>
+        <div class="gh-box">
+            <div class="section-header" style="padding: 0 0 10px 0; border: none;">☁️ GitHub Sync</div>
+            <input type="text" id="gh-owner" class="gh-input" placeholder="GitHub Username">
+            <input type="text" id="gh-repo" class="gh-input" placeholder="Repository Name">
+            <input type="password" id="gh-token" class="gh-input" placeholder="Personal Access Token">
+            <button class="btn-sync" onclick="pushToGitHub()">Push to GitHub</button>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-area">
-        <div class="file-tabs" id="fileTabs"></div>
+    <!-- Main Workspace -->
+    <div class="main-workspace">
+        <div class="tabs-container" id="fileTabs"></div>
         <div id="editor-container"></div>
     </div>
 
-    <!-- Console -->
-    <div class="console-wrapper">
-        <div class="console-header">
-            <span style="font-size: 12px; color: #aaa; text-transform: uppercase; font-weight: bold;">Output</span>
-            <button style="background:none; border:none; color:#888; font-size:12px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('terminal-output').innerHTML=''">CLEAR</button>
+    <!-- Terminal -->
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <span class="term-title">TERMINAL</span>
+            <button class="btn-clear" onclick="document.getElementById('terminal-output').innerHTML=''">CLEAR</button>
         </div>
         <div id="terminal-output">
-            <div class="text-sys">Initializing Pyodide Virtual Engine (~10MB)...</div>
+            <div class="text-sys">Installing Python Environment (~10MB)...</div>
         </div>
     </div>
 
     <script>
-        // Default Files
+        // File System
         let files = {
-            "main.py": "from utils import greet\n\nprint('Starting Project...')\nprint(greet('Developer'))\n",
-            "utils.py": "def greet(name):\n    return f'Hello {name}, Welcome to the Pro Web IDE! 🚀'\n"
+            "main.py": "from utils import greet\n\nprint('--- MAIN APP ---')\nprint(greet('Developer'))\n",
+            "utils.py": "def greet(name):\n    return f'Hello {name}, Welcome to the Premium Web IDE! 🚀'\n",
+            "bot.py": "# Select this tab and click Run\nprint('🤖 Bot is running from bot.py!')\n"
         };
         let currentFile = "main.py";
         let monacoModels = {};
@@ -121,71 +224,79 @@
         const terminal = document.getElementById("terminal-output");
         const runBtn = document.getElementById("runBtn");
 
-        function printTerm(msg, type = "") {
+        function printTerm(msg, type = "text-out") {
             const div = document.createElement("div");
-            div.textContent = msg; 
-            div.className = type;
+            div.textContent = msg; div.className = type;
             terminal.appendChild(div);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
-        // --- UI Interactions ---
         function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
         }
 
+        // --- UI Rendering ---
         function renderUI() {
             const fileList = document.getElementById('fileList');
             const fileTabs = document.getElementById('fileTabs');
-            fileList.innerHTML = ''; 
-            fileTabs.innerHTML = '';
+            fileList.innerHTML = ''; fileTabs.innerHTML = '';
 
             Object.keys(files).forEach(filename => {
-                // Sidebar item
+                // Sidebar Item
                 let li = document.createElement('li');
                 li.className = `file-item ${filename === currentFile ? 'active' : ''}`;
-                li.innerHTML = `📄 ${filename}`;
+                li.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> ${filename}`;
                 li.onclick = () => switchFile(filename);
                 fileList.appendChild(li);
 
-                // Tab item
+                // Tab Item
                 let tab = document.createElement('div');
                 tab.className = `tab ${filename === currentFile ? 'active' : ''}`;
-                tab.innerText = filename;
+                tab.innerHTML = `${filename}`;
                 tab.onclick = () => switchFile(filename);
                 fileTabs.appendChild(tab);
             });
+
+            // Update Run Button Text
+            if (!runBtn.disabled || runBtn.innerHTML.includes("▶")) {
+                runBtn.innerHTML = `▶ Run ${currentFile}`;
+            }
         }
 
         function addNewFile() {
-            let name = prompt("Enter new file name (e.g., script.py):");
-            if (name && !files[name]) {
+            let name = prompt("Enter file name (e.g., script.py):");
+            if (name && name.trim() !== '') {
                 if(!name.endsWith('.py')) name += '.py';
-                files[name] = "# New python file\n";
-                monacoModels[name] = monaco.editor.createModel(files[name], 'python');
-                switchFile(name);
+                if (!files[name]) {
+                    files[name] = "# Write your code here\n";
+                    monacoModels[name] = monaco.editor.createModel(files[name], 'python');
+                    switchFile(name);
+                }
             }
         }
 
         function switchFile(filename) {
-            if (monacoModels[currentFile]) {
-                files[currentFile] = editor.getValue();
-            }
             currentFile = filename;
             editor.setModel(monacoModels[filename]);
             renderUI();
-            
-            // Close sidebar if on mobile
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.remove('open');
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
         }
 
-        // --- Init Monaco Editor ---
+        // --- Initialize Monaco Editor ---
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
         let editor;
         require(['vs/editor/editor.main'], function() {
-            monaco.editor.defineTheme('androidDark', { base: 'vs-dark', inherit: true, rules:[], colors: { 'editor.background': '#121212', 'editor.lineHighlightBackground': '#00000000' } });
+            // Premium Theme
+            monaco.editor.defineTheme('premiumDark', {
+                base: 'vs-dark', inherit: true, rules:[],
+                colors: {
+                    'editor.background': '#0F111A',
+                    'editor.lineHighlightBackground': '#1A1D27',
+                    'editorLineNumber.foreground': '#475569'
+                }
+            });
 
             Object.keys(files).forEach(filename => {
                 monacoModels[filename] = monaco.editor.createModel(files[filename], 'python');
@@ -193,120 +304,109 @@
 
             editor = monaco.editor.create(document.getElementById('editor-container'), {
                 model: monacoModels[currentFile],
-                theme: 'androidDark', automaticLayout: true, wordWrap: 'on', minimap: { enabled: false },
-                lineNumbersMinChars: 3, renderLineHighlight: "none", fontSize: 14, contextmenu: false
+                theme: 'premiumDark', automaticLayout: true, wordWrap: 'on', minimap: { enabled: false },
+                lineNumbersMinChars: 3, renderLineHighlight: "all", fontSize: 14, fontFamily: "'JetBrains Mono', monospace",
+                padding: { top: 15 }, contextmenu: false
             });
+
+            // VERY IMPORTANT: Auto-save code on typing
+            editor.onDidChangeModelContent(() => {
+                files[currentFile] = editor.getValue();
+            });
+
             renderUI();
         });
 
-        // --- Init Pyodide ---
+        // --- Initialize Pyodide ---
         let pyodideReadyPromise;
         async function initPyodide() {
             try {
                 let pyodide = await loadPyodide({
-                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/", // Fixed Engine Loading URL
-                    stdout: (text) => printTerm(text),
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
+                    stdout: (text) => printTerm(text, "text-out"),
                     stderr: (text) => printTerm(text, "text-err")
                 });
-                printTerm("✔ Python Engine Ready! You can run code now.", "text-succ");
-                runBtn.innerHTML = "▶ RUN"; 
+                printTerm("✔ System Ready.", "text-succ");
+                runBtn.innerHTML = `▶ Run ${currentFile}`; 
                 runBtn.disabled = false;
                 return pyodide;
             } catch(e) { 
-                printTerm("❌ Error loading Pyodide. Check internet.", "text-err"); 
-                console.error(e);
+                printTerm("❌ Error loading Environment.", "text-err"); 
             }
         }
         pyodideReadyPromise = initPyodide();
 
-        // --- Run Code (Multi-file Support) ---
+        // --- Run Execution ---
         async function runCode() {
-            runBtn.innerHTML = "⏳ RUNNING"; 
+            runBtn.innerHTML = "⏳ Running..."; 
             runBtn.disabled = true;
-            runBtn.style.backgroundColor = "#FFD600";
             
-            printTerm(`\n> Executing main.py...`, "text-sys");
-
-            files[currentFile] = editor.getValue();
+            printTerm(`\n$ python ${currentFile}`, "text-sys");
 
             try {
                 let pyodide = await pyodideReadyPromise;
                 
-                // Write all files to virtual system
+                // 1. Sync all files to Pyodide Virtual OS
                 for (const [name, content] of Object.entries(files)) {
                     pyodide.FS.writeFile(name, content);
                 }
 
-                // Run main.py
-                await pyodide.runPythonAsync(files['main.py']);
+                // 2. Clear Python Cache (Fixes the issue where utils.py didn't update)
+                let clearCacheScript = `
+import sys
+user_files =[f.replace('.py', '') for f in ${JSON.stringify(Object.keys(files))}]
+for m in user_files:
+    if m in sys.modules:
+        del sys.modules[m]
+                `;
+                await pyodide.runPythonAsync(clearCacheScript);
+
+                // 3. RUN CURRENT FILE (Not hardcoded main.py anymore!)
+                await pyodide.runPythonAsync(files[currentFile]);
+
             } catch (err) {
                 printTerm(err.toString(), "text-err");
             }
-            runBtn.innerHTML = "▶ RUN"; 
+
+            runBtn.innerHTML = `▶ Run ${currentFile}`; 
             runBtn.disabled = false;
-            runBtn.style.backgroundColor = "#00E676";
         }
 
-        // --- GITHUB INTEGRATION (DIRECT PUSH) ---
+        // --- GitHub Upload ---
         async function pushToGitHub() {
             const owner = document.getElementById('gh-owner').value.trim();
             const repo = document.getElementById('gh-repo').value.trim();
             const token = document.getElementById('gh-token').value.trim();
 
-            if (!owner || !repo || !token) {
-                alert("Please fill all GitHub details in the sidebar!");
-                return;
-            }
+            if (!owner || !repo || !token) { alert("Please fill GitHub details."); return; }
 
-            printTerm(`\n> Syncing to GitHub (${owner}/${repo})...`, "text-sys");
-            
-            // Close sidebar
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.remove('open');
+            printTerm(`\n$ git push to ${owner}/${repo}...`, "text-sys");
+            toggleMenu(); // close sidebar
 
-            files[currentFile] = editor.getValue();
-
-            // Iterate over all files and push
             for (const [filename, content] of Object.entries(files)) {
-                printTerm(`Uploading ${filename}...`);
+                printTerm(`Uploading ${filename}...`, "text-sys");
                 const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
                 
                 try {
                     let sha = null;
                     const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
-                    if (getRes.ok) {
-                        const data = await getRes.json();
-                        sha = data.sha; // Needed to update existing files
-                    }
+                    if (getRes.ok) { sha = (await getRes.json()).sha; }
 
-                    // Convert to base64 properly handling special characters
                     const contentBase64 = btoa(unescape(encodeURIComponent(content))); 
-                    const bodyData = {
-                        message: `Update ${filename} via Mobile IDE`,
-                        content: contentBase64
-                    };
+                    const bodyData = { message: `Update ${filename}`, content: contentBase64 };
                     if (sha) bodyData.sha = sha;
 
                     const putRes = await fetch(apiUrl, {
                         method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify(bodyData)
                     });
 
-                    if (putRes.ok) {
-                        printTerm(`✔ ${filename} pushed successfully!`, "text-succ");
-                    } else {
-                        const errData = await putRes.json();
-                        printTerm(`❌ Failed ${filename}: ${errData.message}`, "text-err");
-                    }
-                } catch (error) {
-                    printTerm(`❌ Error on ${filename}: ${error.message}`, "text-err");
-                }
+                    if (putRes.ok) printTerm(`✔ ${filename} uploaded!`, "text-succ");
+                    else printTerm(`❌ Failed ${filename}: ${(await putRes.json()).message}`, "text-err");
+                } catch (error) { printTerm(`❌ Error: ${error.message}`, "text-err"); }
             }
-            printTerm("✔ GitHub Sync Complete!", "text-sys");
+            printTerm("✔ Sync Complete!", "text-succ");
         }
     </script>
 </body>
