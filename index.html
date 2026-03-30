@@ -8,8 +8,9 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="assets/style.css">
     
-    <!-- Premium Fonts -->
+    <!-- Premium Fonts & VS Code Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://microsoft.github.io/vscode-codicons/dist/codicon.css" rel="stylesheet">
     
     <!-- Monaco & Pyodide -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
@@ -17,43 +18,84 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Top Header -->
     <header class="header">
         <div class="brand">
-            <button class="menu-btn" onclick="toggleMenu()">☰</button>
-            <span class="brand-title">Ultimate IDE</span>
+            <i class="codicon codicon-menu menu-btn" onclick="toggleSidebar()"></i>
+            <span class="brand-title">Ultimate Code</span>
         </div>
-        <button id="runBtn" class="btn-run" onclick="runCode()" disabled>⏳ Loading...</button>
+        <div class="header-actions">
+            <span class="shortcut-hint">Ctrl + S to Run</span>
+            <button id="runBtn" class="btn-run" onclick="runCode()" disabled>
+                <i class="codicon codicon-play"></i> Loading...
+            </button>
+        </div>
     </header>
 
-    <!-- Sidebar & Overlay -->
-    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="section-header">
-            <span>Explorer</span>
-            <div class="actions">
-                <button class="icon-btn" onclick="addNewFile()" title="New File">📄+</button>
-                <button class="icon-btn" onclick="addNewFolder()" title="New Folder">📁+</button>
+    <div class="app-body">
+        <!-- Activity Bar -->
+        <div class="activity-bar">
+            <div class="act-top">
+                <i class="codicon codicon-files active"></i>
+                <i class="codicon codicon-search"></i>
+                <i class="codicon codicon-source-control"></i>
+            </div>
+            <div class="act-bottom">
+                <i class="codicon codicon-settings-gear"></i>
             </div>
         </div>
-        <div class="file-tree" id="fileTree"></div> <!-- Files/Folders will load here -->
-    </div>
 
-    <!-- Main Workspace -->
-    <div class="main-workspace">
-        <div class="tabs-container" id="fileTabs"></div>
-        <div id="editor-container"></div>
-    </div>
-
-    <!-- Terminal / Output -->
-    <div class="terminal-container">
-        <div class="terminal-header">
-            <span class="term-title" id="output-title">TERMINAL</span>
-            <button class="btn-clear" onclick="clearOutput()">CLEAR</button>
+        <!-- Sidebar (Explorer) -->
+        <div class="sidebar" id="sidebar">
+            <div class="section-header">
+                <span>EXPLORER</span>
+                <div class="actions">
+                    <i class="codicon codicon-new-file icon-btn" onclick="addNewFile()" title="New File"></i>
+                    <i class="codicon codicon-new-folder icon-btn" onclick="addNewFolder()" title="New Folder"></i>
+                </div>
+            </div>
+            <div class="file-tree" id="fileTree"></div>
         </div>
-        <div id="terminal-output"></div>
-        <iframe id="web-preview" class="hidden"></iframe> <!-- For HTML/CSS/JS preview -->
+
+        <!-- Vertical Resizer -->
+        <div class="resizer-v" id="resizer-v"></div>
+
+        <!-- Main Editor Area -->
+        <div class="main-workspace">
+            <div class="tabs-container" id="fileTabs"></div>
+            
+            <div id="editor-container"></div>
+
+            <!-- Horizontal Resizer -->
+            <div class="resizer-h" id="resizer-h"></div>
+
+            <!-- Terminal / Output -->
+            <div class="terminal-container" id="terminal-container">
+                <div class="terminal-tabs">
+                    <div class="term-tab active" id="output-title">TERMINAL</div>
+                    <div class="term-actions">
+                        <i class="codicon codicon-clear-all icon-btn" onclick="clearOutput()" title="Clear Output"></i>
+                        <i class="codicon codicon-chevron-down icon-btn" onclick="minimizeTerminal()" title="Minimize"></i>
+                    </div>
+                </div>
+                <div id="terminal-output"></div>
+                <iframe id="web-preview" class="hidden"></iframe>
+            </div>
+        </div>
     </div>
+
+    <!-- Status Bar -->
+    <footer class="status-bar">
+        <div class="status-left">
+            <span id="pyodide-status"><i class="codicon codicon-sync codicon-modifier-spin"></i> Engine Loading...</span>
+        </div>
+        <div class="status-right">
+            <span id="cursor-position">Ln 1, Col 1</span>
+            <span id="current-language">Python</span>
+            <span>UTF-8</span>
+            <span>Prettier</span>
+        </div>
+    </footer>
 
     <!-- External JS -->
     <script src="assets/app.js"></script>
