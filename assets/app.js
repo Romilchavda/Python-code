@@ -3,12 +3,13 @@ const defaultFiles = {
     "main.py": "print('🚀 Welcome to Ultimate Pro IDE!')\n",
     "index.html": "<!DOCTYPE html>\n<html>\n<head>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <h1>🌐 HTML/CSS Preview Works!</h1>\n</body>\n</html>",
     "style.css": "body { background: #1e1e1e; color: #58a6ff; text-align: center; font-family: sans-serif; }",
-    "script.js": "console.log('JS is running natively!');"
+    "script.js": "console.log('JS is running natively!');",
+    "data.json": '{\n  "project": "Ultimate Pro IDE",\n  "version": "1.0.0",\n  "premium": true\n}'
 };
 
 let files = JSON.parse(localStorage.getItem('ide_files')) || defaultFiles;
 let currentFile = localStorage.getItem('ide_currentFile') || "main.py";
-let openTabs = JSON.parse(localStorage.getItem('ide_openTabs')) ||["main.py", "index.html"];
+let openTabs = JSON.parse(localStorage.getItem('ide_openTabs')) ||["main.py", "index.html", "data.json"];
 let monacoModels = {};
 
 // UI Elements
@@ -22,7 +23,7 @@ const icons = {
     html: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
     css: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
     js: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
-    json: "https://www.svgrepo.com/show/452253/json.svg",
+    json: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/json/json-original.svg",
     folder: "https://www.svgrepo.com/show/448222/folder.svg",
     default: "https://www.svgrepo.com/show/448225/file.svg"
 };
@@ -67,10 +68,9 @@ function showModal(title, type, defaultValue, callback) {
         inputEl.value = defaultValue || ''; inputEl.focus();
     } else {
         inputEl.style.display = 'none'; msgEl.style.display = 'block';
-        msgEl.innerText = defaultValue; // Passing message here
+        msgEl.innerText = defaultValue;
     }
 
-    // Unbind previous clicks
     confirmBtn.onclick = null;
     confirmBtn.onclick = () => {
         closeModal();
@@ -81,7 +81,6 @@ function showModal(title, type, defaultValue, callback) {
         }
     };
     
-    // Press Enter to confirm
     inputEl.onkeypress = (e) => { if(e.key === 'Enter') confirmBtn.click(); };
 }
 
@@ -155,9 +154,9 @@ function switchFile(filename) {
     renderUI(); saveState();
 }
 
-// --- FILE OPERATIONS WITH CUSTOM MODALS ---
+// --- FILE OPERATIONS ---
 function addNewFile() {
-    showModal("Create New File", "input", "script.js", (name) => {
+    showModal("Create New File", "input", "data.json", (name) => {
         if (!files[name]) {
             files[name] = "";
             monacoModels[name] = monaco.editor.createModel("", getLanguage(name));
@@ -175,7 +174,7 @@ function addNewFolder() {
 }
 
 function deleteFile(filename) {
-    showModal("Delete File", "confirm", `Are you sure you want to delete '${filename}'? This cannot be undone.`, (confirmed) => {
+    showModal("Delete File", "confirm", `Are you sure you want to delete '${filename}'?`, (confirmed) => {
         if(confirmed) {
             delete files[filename];
             if (monacoModels[filename]) monacoModels[filename].dispose();
@@ -198,16 +197,46 @@ function renameFile(oldName) {
     });
 }
 
-// --- Monaco Init ---
+// --- Monaco Init (With Pro Auto-Suggestions) ---
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
 let editor;
 
 require(['vs/editor/editor.main'], function() {
     monaco.editor.defineTheme('vs-dark-custom', { base: 'vs-dark', inherit: true, rules:[], colors: { 'editor.background': '#1e1e1e' }});
+    
+    // 🔥 PYTHON CUSTOM AUTO-COMPLETE SNIPPETS 🔥
+    monaco.languages.registerCompletionItemProvider('python', {
+        provideCompletionItems: function(model, position) {
+            const word = model.getWordUntilPosition(position);
+            const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+            const suggestions =[
+                { label: 'def', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'def ${1:function_name}(${2:args}):\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create a function', range: range },
+                { label: 'class', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'class ${1:ClassName}:\n\tdef __init__(self):\n\t\t${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create a class', range: range },
+                { label: 'for', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'for ${1:item} in ${2:iterable}:\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'For loop', range: range },
+                { label: 'if', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'if ${1:condition}:\n\t${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'If statement', range: range },
+                { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Print output', range: range },
+                { label: 'import', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'import ${1:module}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Import library', range: range }
+            ];
+            return { suggestions: suggestions };
+        }
+    });
+
     Object.keys(files).forEach(f => { monacoModels[f] = monaco.editor.createModel(files[f], getLanguage(f)); });
 
+    // Enable all Smart Editing Features
     editor = monaco.editor.create(document.getElementById('editor-container'), {
-        theme: 'vs-dark-custom', automaticLayout: true, wordWrap: 'on', fontSize: 13, fontFamily: "'JetBrains Mono', monospace", minimap: { enabled: false }
+        theme: 'vs-dark-custom', 
+        automaticLayout: true, 
+        wordWrap: 'on', 
+        fontSize: 14, 
+        fontFamily: "'JetBrains Mono', monospace", 
+        minimap: { enabled: false },
+        suggestOnTriggerCharacters: true,
+        quickSuggestions: { other: true, comments: false, strings: true },
+        parameterHints: { enabled: true },
+        snippetSuggestions: 'inline',
+        formatOnPaste: true,
+        formatOnType: true
     });
 
     if(currentFile && monacoModels[currentFile]) editor.setModel(monacoModels[currentFile]);
@@ -244,7 +273,7 @@ async function initPyodide() {
 }
 pyodideReadyPromise = initPyodide();
 
-// --- SMART RUNNER ---
+// --- SMART RUNNER (Includes JSON Support) ---
 async function runCode() {
     if(!currentFile) return;
     runBtn.innerHTML = `<i class="codicon codicon-sync codicon-modifier-spin"></i>`; runBtn.disabled = true;
@@ -259,6 +288,7 @@ async function runCode() {
             for (const[n, c] of Object.entries(files)) { pyodide.FS.writeFile(n, c); }
             await pyodide.runPythonAsync(files[currentFile]);
         } catch (err) { printTerm(err.toString(), "text-err"); }
+        
     } else if (ext === 'html' || ext === 'css') {
         terminal.classList.add('hidden'); webPreview.classList.remove('hidden'); title.innerText = "WEB PREVIEW";
         let htmlContent = files[currentFile];
@@ -267,13 +297,27 @@ async function runCode() {
             if(files['script.js']) htmlContent = htmlContent.replace('</body>', `<script>${files['script.js']}</script></body>`);
         } else { if(files['index.html']) htmlContent = files['index.html'].replace('</head>', `<style>${files[currentFile]}</style></head>`); }
         webPreview.srcdoc = htmlContent;
+
     } else if (ext === 'js') {
         terminal.classList.remove('hidden'); webPreview.classList.add('hidden'); title.innerText = "TERMINAL - NODE";
         printTerm(`\n> node ${currentFile}`, "text-sys");
         let oldLog = console.log; console.log = function(...a) { printTerm(a.join(' ')); oldLog.apply(console, a); };
         try { eval(files[currentFile]); } catch (err) { printTerm(err.toString(), "text-err"); }
         console.log = oldLog;
+
+    } else if (ext === 'json') {
+        // 🔥 JSON VALIDATION RUNNER 🔥
+        terminal.classList.remove('hidden'); webPreview.classList.add('hidden'); title.innerText = "TERMINAL - JSON";
+        printTerm(`\n> Validating ${currentFile}...`, "text-sys");
+        try {
+            let parsed = JSON.parse(files[currentFile]);
+            printTerm("✔ JSON is Valid!\n", "text-succ");
+            printTerm(JSON.stringify(parsed, null, 2));
+        } catch (err) {
+            printTerm("❌ Invalid JSON Format!\n" + err.toString(), "text-err");
+        }
     }
+    
     runBtn.innerHTML = `<i class="codicon codicon-play"></i> Run`; runBtn.disabled = false;
 }
 
@@ -293,5 +337,5 @@ function toggleSidebar() {
     setTimeout(() => { if(editor) editor.layout(); }, 300);
 }
 
-// Resizers & Shortcuts logic (same as before)
+// Shortcut (Ctrl + S)
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); runCode(); } });
