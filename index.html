@@ -52,6 +52,7 @@
                         <option value="html">HTML</option>
                         <option value="css">CSS</option>
                         <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
                     </select>
                     <input type="text" id="snip-trigger" class="modal-input" style="width: 60%;" placeholder="Shortcut (e.g. ! or clg)">
                 </div>
@@ -83,6 +84,10 @@
         </div>
         <div class="header-actions">
             <span class="shortcut-hint">Ctrl + S to Run</span>
+            <!-- Naya Snippet Button Top Header Mein -->
+            <button class="btn-run" onclick="openSnippetManager()" style="background-color: transparent; border: 1px solid #444; color: #1AB6FF; margin-right: 10px;">
+                <i class="codicon codicon-symbol-snippet"></i> Snippets
+            </button>
             <button id="runBtn" class="btn-run" onclick="runCode()" disabled>
                 <i class="codicon codicon-play"></i> Loading...
             </button>
