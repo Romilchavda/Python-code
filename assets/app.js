@@ -1,8 +1,6 @@
 // --- Initial Setup & Local Storage (Clean Workspace) ---
-// Default files ko ekdum empty kar diya gaya hai
 const defaultFiles = {};
 
-// Naye LocalStorage keys taaki purani default files dobara load na ho
 let files = JSON.parse(localStorage.getItem('ide_files_v2')) || defaultFiles;
 let currentFile = localStorage.getItem('ide_currentFile_v2') || null;
 let openTabs = JSON.parse(localStorage.getItem('ide_openTabs_v2')) ||[];
@@ -217,7 +215,7 @@ let editor;
 require(['vs/editor/editor.main'], function() {
     monaco.editor.defineTheme('vs-dark-custom', { base: 'vs-dark', inherit: true, rules:[], colors: { 'editor.background': '#1e1e1e' }});
     
-    // 🔥 1. Python Snippets
+    // Snippets
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model, position) {
             const word = model.getWordUntilPosition(position);
@@ -231,19 +229,16 @@ require(['vs/editor/editor.main'], function() {
         }
     });
 
-    // 🔥 2. HTML Boilerplate Snippet (!)
     monaco.languages.registerCompletionItemProvider('html', {
         provideCompletionItems: function(model, position) {
             const word = model.getWordUntilPosition(position);
             const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
             return { suggestions:[
-                { label: '!', kind: monaco.languages.CompletionItemKind.Snippet, insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<meta charset="UTF-8">\n\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n\t<title>${1:Document}</title>\n</head>\n<body>\n\t${2}\n</body>\n</html>', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'HTML5 Boilerplate', range: range },
-                { label: 'html5', kind: monaco.languages.CompletionItemKind.Snippet, insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<meta charset="UTF-8">\n\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n\t<title>${1:Document}</title>\n</head>\n<body>\n\t${2}\n</body>\n</html>', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'HTML5 Boilerplate', range: range }
+                { label: '!', kind: monaco.languages.CompletionItemKind.Snippet, insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<meta charset="UTF-8">\n\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n\t<title>${1:Document}</title>\n</head>\n<body>\n\t${2}\n</body>\n</html>', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'HTML5 Boilerplate', range: range }
             ]};
         }
     });
 
-    // 🔥 3. CSS Reset Boilerplate (reset)
     monaco.languages.registerCompletionItemProvider('css', {
         provideCompletionItems: function(model, position) {
             const word = model.getWordUntilPosition(position);
@@ -304,7 +299,7 @@ function clearOutput() { terminal.innerHTML = ''; }
 function minimizeTerminal() {
     let term = document.getElementById("terminal-container");
     term.style.height = term.style.height === "30px" ? "30%" : "30px";
-    setTimeout(() => editor.layout(), 300);
+    setTimeout(() => { if(editor) editor.layout(); }, 300);
 }
 
 let pyodideReadyPromise;
@@ -363,20 +358,69 @@ async function runCode() {
     runBtn.innerHTML = `<i class="codicon codicon-play"></i> Run`; runBtn.disabled = false;
 }
 
-// --- MOBILE TOGGLE LOGIC ---
+// --- NEW FIX: MOBILE TOGGLE LOGIC ---
 function toggleSidebar() {
     let sidebar = document.getElementById('sidebar');
     let overlay = document.getElementById('mobile-overlay');
-    let resizer = document.getElementById('resizer-v');
     
     if(window.innerWidth <= 768) {
         sidebar.classList.toggle('mobile-active');
         overlay.classList.toggle('active');
     } else {
-        if (sidebar.style.display === 'none') { sidebar.style.display = 'flex'; resizer.style.display = 'block'; }
-        else { sidebar.style.display = 'none'; resizer.style.display = 'none'; }
+        // Desktop par agar sidebar band karna ho tabhi
+        sidebar.style.display = sidebar.style.display === 'none' ? 'flex' : 'none';
+        document.getElementById('resizer-v').style.display = sidebar.style.display === 'none' ? 'none' : 'block';
     }
     setTimeout(() => { if(editor) editor.layout(); }, 300);
 }
 
+// --- NEW FIX: WINDOW RESIZE HANDLER ---
+// Ye code device rotate karne par ya window size change karne par bugs fix karega
+window.addEventListener('resize', () => {
+    let sidebar = document.getElementById('sidebar');
+    let overlay = document.getElementById('mobile-overlay');
+
+    if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-active');
+        overlay.classList.remove('active');
+        sidebar.style.display = 'flex'; // Reset for desktop
+        document.getElementById('resizer-v').style.display = 'block';
+    } else {
+        sidebar.style.display = ''; // Clear inline styles for mobile
+        document.getElementById('resizer-v').style.display = '';
+    }
+    
+    if (editor) {
+        setTimeout(() => editor.layout(), 100);
+    }
+});
+
+// --- NEW FEATURE: DRAG TO RESIZE (PC) ---
+const resizerV = document.getElementById('resizer-v');
+let isResizingV = false;
+
+resizerV.addEventListener('mousedown', () => { isResizingV = true; document.body.style.cursor = 'col-resize'; });
+document.addEventListener('mousemove', (e) => {
+    if (!isResizingV) return;
+    let newWidth = e.clientX - 48; // 48 is activity bar width
+    if (newWidth > 150 && newWidth < 500) { document.getElementById('sidebar').style.width = newWidth + 'px'; }
+});
+document.addEventListener('mouseup', () => {
+    if (isResizingV) { isResizingV = false; document.body.style.cursor = 'default'; if(editor) editor.layout(); }
+});
+
+const resizerH = document.getElementById('resizer-h');
+let isResizingH = false;
+
+resizerH.addEventListener('mousedown', () => { isResizingH = true; document.body.style.cursor = 'row-resize'; });
+document.addEventListener('mousemove', (e) => {
+    if (!isResizingH) return;
+    let newHeight = window.innerHeight - e.clientY - 22; // 22 is status bar height
+    if (newHeight > 100 && newHeight < window.innerHeight * 0.8) { document.getElementById('terminal-container').style.height = newHeight + 'px'; }
+});
+document.addEventListener('mouseup', () => {
+    if (isResizingH) { isResizingH = false; document.body.style.cursor = 'default'; if(editor) editor.layout(); }
+});
+
+// Save shortcut mapping
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); runCode(); } });
