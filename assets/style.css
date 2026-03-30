@@ -102,3 +102,13 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-editor); col
     
     .terminal-container { height: 40%; }
 }
+
+/* --- Monaco Mobile Suggestion Tap Fix --- */
+.monaco-editor .suggest-widget {
+    z-index: 9999 !important;
+    touch-action: none; /* Prevents scroll conflict on mobile */
+}
+.monaco-editor .suggest-widget .monaco-list-row {
+    cursor: pointer !important;
+    padding: 2px 0;
+}

@@ -4,12 +4,12 @@ const defaultFiles = {
     "index.html": "<!DOCTYPE html>\n<html>\n<head>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <h1>🌐 HTML/CSS Preview Works!</h1>\n</body>\n</html>",
     "style.css": "body { background: #1e1e1e; color: #58a6ff; text-align: center; font-family: sans-serif; }",
     "script.js": "console.log('JS is running natively!');",
-    "data.json": '{\n  "project": "Ultimate Pro IDE",\n  "version": "1.0.0",\n  "premium": true\n}'
+    "package.json": "{\n  \"name\": \"ultimate-ide\",\n  \"version\": \"1.0.0\"\n}"
 };
 
 let files = JSON.parse(localStorage.getItem('ide_files')) || defaultFiles;
 let currentFile = localStorage.getItem('ide_currentFile') || "main.py";
-let openTabs = JSON.parse(localStorage.getItem('ide_openTabs')) ||["main.py", "index.html", "data.json"];
+let openTabs = JSON.parse(localStorage.getItem('ide_openTabs')) ||["main.py", "index.html"];
 let monacoModels = {};
 
 // UI Elements
@@ -17,13 +17,13 @@ const terminal = document.getElementById("terminal-output");
 const webPreview = document.getElementById("web-preview");
 const runBtn = document.getElementById("runBtn");
 
-// --- REAL LOGOS (DevIcons) ---
+// --- REAL LOGOS ---
 const icons = {
     py: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
     html: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
     css: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
     js: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
-    json: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/json/json-original.svg",
+    json: "https://www.svgrepo.com/show/452253/json.svg", // Fixed JSON Logo
     folder: "https://www.svgrepo.com/show/448222/folder.svg",
     default: "https://www.svgrepo.com/show/448225/file.svg"
 };
@@ -133,7 +133,7 @@ function renderUI() {
 function openFile(filename) {
     if(!openTabs.includes(filename)) openTabs.push(filename);
     switchFile(filename);
-    if(window.innerWidth <= 768) toggleSidebar(); // Close sidebar on mobile
+    if(window.innerWidth <= 768) toggleSidebar(); 
 }
 
 function closeTab(filename) {
@@ -154,9 +154,10 @@ function switchFile(filename) {
     renderUI(); saveState();
 }
 
-// --- FILE OPERATIONS ---
+// --- FILE OPERATIONS (Fixed default names) ---
 function addNewFile() {
-    showModal("Create New File", "input", "data.json", (name) => {
+    // Empty default value passed here ""
+    showModal("Create New File", "input", "", (name) => {
         if (!files[name]) {
             files[name] = "";
             monacoModels[name] = monaco.editor.createModel("", getLanguage(name));
@@ -168,7 +169,8 @@ function addNewFile() {
 }
 
 function addNewFolder() {
-    showModal("Create New Folder", "input", "src", (name) => {
+    // Empty default value passed here ""
+    showModal("Create New Folder", "input", "", (name) => {
         files[`${name}/.keep`] = ""; renderUI(); saveState();
     });
 }
@@ -197,14 +199,14 @@ function renameFile(oldName) {
     });
 }
 
-// --- Monaco Init (With Pro Auto-Suggestions) ---
+// --- Monaco Init (Mobile Touch & Suggestions Fix) ---
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
 let editor;
 
 require(['vs/editor/editor.main'], function() {
     monaco.editor.defineTheme('vs-dark-custom', { base: 'vs-dark', inherit: true, rules:[], colors: { 'editor.background': '#1e1e1e' }});
     
-    // 🔥 PYTHON CUSTOM AUTO-COMPLETE SNIPPETS 🔥
+    // Custom Snippets for Python
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model, position) {
             const word = model.getWordUntilPosition(position);
@@ -213,9 +215,7 @@ require(['vs/editor/editor.main'], function() {
                 { label: 'def', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'def ${1:function_name}(${2:args}):\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create a function', range: range },
                 { label: 'class', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'class ${1:ClassName}:\n\tdef __init__(self):\n\t\t${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create a class', range: range },
                 { label: 'for', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'for ${1:item} in ${2:iterable}:\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'For loop', range: range },
-                { label: 'if', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'if ${1:condition}:\n\t${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'If statement', range: range },
-                { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Print output', range: range },
-                { label: 'import', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'import ${1:module}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Import library', range: range }
+                { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Print output', range: range }
             ];
             return { suggestions: suggestions };
         }
@@ -223,7 +223,6 @@ require(['vs/editor/editor.main'], function() {
 
     Object.keys(files).forEach(f => { monacoModels[f] = monaco.editor.createModel(files[f], getLanguage(f)); });
 
-    // Enable all Smart Editing Features
     editor = monaco.editor.create(document.getElementById('editor-container'), {
         theme: 'vs-dark-custom', 
         automaticLayout: true, 
@@ -231,12 +230,14 @@ require(['vs/editor/editor.main'], function() {
         fontSize: 14, 
         fontFamily: "'JetBrains Mono', monospace", 
         minimap: { enabled: false },
-        suggestOnTriggerCharacters: true,
+        // --- MOBILE TOUCH CONFIG ---
+        suggestSelection: 'first',
+        acceptSuggestionOnEnter: 'on', // Pressing Enter accepts suggestion
+        acceptSuggestionOnCommitCharacter: true,
+        snippetSuggestions: 'top',
+        tabCompletion: "on",
         quickSuggestions: { other: true, comments: false, strings: true },
-        parameterHints: { enabled: true },
-        snippetSuggestions: 'inline',
-        formatOnPaste: true,
-        formatOnType: true
+        mouseWheelZoom: true
     });
 
     if(currentFile && monacoModels[currentFile]) editor.setModel(monacoModels[currentFile]);
@@ -248,6 +249,10 @@ require(['vs/editor/editor.main'], function() {
     editor.onDidChangeCursorPosition((e) => {
         document.getElementById("cursor-position").innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
     });
+    
+    // Enable run button immediately for HTML/CSS/JSON
+    runBtn.disabled = false;
+    runBtn.innerHTML = `<i class="codicon codicon-play"></i> Run`;
     renderUI();
 });
 
@@ -267,13 +272,13 @@ let pyodideReadyPromise;
 async function initPyodide() {
     try {
         let pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/", stdout: printTerm, stderr: (t)=>printTerm(t, "text-err") });
-        document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-check"></i> Ready`;
-        runBtn.disabled = false; return pyodide;
-    } catch(e) { document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-error"></i> Failed`; }
+        document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-check"></i> Python Ready`;
+        return pyodide;
+    } catch(e) { document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-error"></i> Engine Failed`; }
 }
 pyodideReadyPromise = initPyodide();
 
-// --- SMART RUNNER (Includes JSON Support) ---
+// --- SMART RUNNER ---
 async function runCode() {
     if(!currentFile) return;
     runBtn.innerHTML = `<i class="codicon codicon-sync codicon-modifier-spin"></i>`; runBtn.disabled = true;
@@ -285,6 +290,7 @@ async function runCode() {
         printTerm(`\n> python ${currentFile}`, "text-sys");
         try {
             let pyodide = await pyodideReadyPromise;
+            if(!pyodide) throw new Error("Python Engine is still loading. Please wait a second and try again.");
             for (const[n, c] of Object.entries(files)) { pyodide.FS.writeFile(n, c); }
             await pyodide.runPythonAsync(files[currentFile]);
         } catch (err) { printTerm(err.toString(), "text-err"); }
@@ -306,16 +312,13 @@ async function runCode() {
         console.log = oldLog;
 
     } else if (ext === 'json') {
-        // 🔥 JSON VALIDATION RUNNER 🔥
         terminal.classList.remove('hidden'); webPreview.classList.add('hidden'); title.innerText = "TERMINAL - JSON";
         printTerm(`\n> Validating ${currentFile}...`, "text-sys");
         try {
             let parsed = JSON.parse(files[currentFile]);
             printTerm("✔ JSON is Valid!\n", "text-succ");
             printTerm(JSON.stringify(parsed, null, 2));
-        } catch (err) {
-            printTerm("❌ Invalid JSON Format!\n" + err.toString(), "text-err");
-        }
+        } catch (err) { printTerm("❌ Invalid JSON Format!\n" + err.toString(), "text-err"); }
     }
     
     runBtn.innerHTML = `<i class="codicon codicon-play"></i> Run`; runBtn.disabled = false;
@@ -337,5 +340,4 @@ function toggleSidebar() {
     setTimeout(() => { if(editor) editor.layout(); }, 300);
 }
 
-// Shortcut (Ctrl + S)
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); runCode(); } });
