@@ -17,13 +17,14 @@ const terminal = document.getElementById("terminal-output");
 const webPreview = document.getElementById("web-preview");
 const runBtn = document.getElementById("runBtn");
 
-// --- REAL LOGOS (Fixed JSON Logo with VS Code Official Icon) ---
+// --- REAL LOGOS (100% Fail-Proof Embedded JSON Logo) ---
 const icons = {
     py: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
     html: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
     css: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
     js: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
-    json: "https://cdn.jsdelivr.net/gh/vscode-icons/vscode-icons@master/icons/file_type_json.svg", // 100% Working VS Code JSON Icon
+    // JSON icon is now hardcoded directly so it NEVER breaks!
+    json: "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F5DE19'%3E%3Cpath d='M9.5 3H7.4c-1.2 0-2 .8-2 2v4.1c0 1.2-.8 2-2 2h-.8v1.8h.8c1.2 0 2 .8 2 2V19c0 1.2.8 2 2 2h2.1v-1.8H7.4c-.2 0-.4-.2-.4-.4v-4.1c0-1.8-1.2-3-3-3 1.8 0 3-1.2 3-3V4.6c0-.2.2-.4.4-.4h2.1V3zm5 0v1.8h2.1c.2 0 .4.2.4.4v4.1c0 1.8 1.2 3 3 3-1.8 0-3 1.2-3 3V19c0 .2-.2.4-.4.4h-2.1V21h2.1c1.2 0 2-.8 2-2v-4.1c0-1.2.8-2 2-2h.8v-1.8h-.8c-1.2 0-2-.8-2-2V5c0-1.2-.8-2-2-2h-2.1z'/%3E%3C/svg%3E",
     folder: "https://www.svgrepo.com/show/448222/folder.svg",
     default: "https://www.svgrepo.com/show/448225/file.svg"
 };
