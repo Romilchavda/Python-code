@@ -17,7 +17,7 @@ function closeSnippetManager() { document.getElementById('snippet-modal').classL
 
 function renderSnippetList() {
     const listDiv = document.getElementById('snippet-list'); listDiv.innerHTML = '';
-    ['html', 'css', 'javascript'].forEach(lang => {
+    ['html', 'css', 'python', 'javascript'].forEach(lang => {
         if(userSnippets[lang] && userSnippets[lang].length > 0) {
             userSnippets[lang].forEach((snip, index) => {
                 let item = document.createElement('div');
