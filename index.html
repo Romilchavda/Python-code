@@ -3,177 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Python Premium IDE</title>
+    <title>Ultimate Pro IDE</title>
     
-    <!-- Premium Fonts: Inter for UI, JetBrains Mono for Code -->
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/style.css">
+    
+    <!-- Premium Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Monaco & Pyodide -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-
-    <style>
-        :root {
-            --bg-main: #0F111A;
-            --bg-panel: #1A1D27;
-            --border-color: #2E3245;
-            --accent-blue: #3B82F6;
-            --accent-green: #10B981;
-            --text-main: #E2E8F0;
-            --text-muted: #94A3B8;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- Sleek Header --- */
-        .header {
-            background-color: var(--bg-panel);
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            border-bottom: 1px solid var(--border-color);
-            z-index: 20;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-        }
-
-        .menu-btn {
-            background: none; border: none; color: var(--text-main);
-            font-size: 24px; cursor: pointer; padding: 5px;
-        }
-
-        .btn-run {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--accent-green);
-            border: 1px solid var(--accent-green);
-            height: 34px;
-            padding: 0 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-run:hover:not(:disabled) { background-color: var(--accent-green); color: #fff; }
-        .btn-run:disabled { background-color: transparent; border-color: var(--text-muted); color: var(--text-muted); cursor: not-allowed; }
-
-        /* --- Sidebar & Overlay --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; display: none; backdrop-filter: blur(2px); }
-        .overlay.active { display: block; }
-        
-        .sidebar {
-            position: fixed; left: -280px; top: 55px; width: 280px; height: calc(100vh - 55px);
-            background-color: var(--bg-panel); z-index: 16; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; flex-direction: column; border-right: 1px solid var(--border-color);
-        }
-        .sidebar.active { left: 0; }
-
-        .section-header {
-            padding: 16px; font-size: 11px; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 1px; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
-        }
-
-        .btn-add { background: none; border: none; color: var(--accent-blue); cursor: pointer; font-weight: 600; font-size: 12px; }
-        
-        .file-list { list-style: none; padding: 10px; overflow-y: auto; flex: 1; }
-        .file-item {
-            padding: 10px 12px; border-radius: 6px; margin-bottom: 4px; font-size: 14px;
-            color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;
-            transition: 0.2s;
-        }
-        .file-item:hover { background-color: rgba(255,255,255,0.05); }
-        .file-item.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-weight: 500; }
-
-        /* GitHub Sync Box */
-        .gh-box { padding: 16px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
-        .gh-input {
-            width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;
-            border: 1px solid var(--border-color); background: var(--bg-main);
-            color: white; font-size: 13px; font-family: 'Inter'; outline: none;
-        }
-        .gh-input:focus { border-color: var(--accent-blue); }
-        .btn-sync {
-            width: 100%; background: var(--text-main); color: var(--bg-main);
-            border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer;
-        }
-
-        /* --- Editor Area --- */
-        .main-workspace { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
-        
-        .tabs-container {
-            display: flex; background-color: var(--bg-panel);
-            border-bottom: 1px solid var(--border-color); overflow-x: auto;
-        }
-        .tabs-container::-webkit-scrollbar { display: none; }
-        
-        .tab {
-            padding: 12px 20px; font-size: 13px; color: var(--text-muted);
-            cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
-            display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace;
-        }
-        .tab.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); background-color: var(--bg-main); }
-        
-        #editor-container { flex: 1; width: 100%; background-color: var(--bg-main); }
-
-        /* --- Terminal / Console --- */
-        .terminal-container {
-            height: 35%; display: flex; flex-direction: column;
-            background-color: #090A10; border-top: 1px solid var(--border-color);
-        }
-        .terminal-header {
-            padding: 8px 16px; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .term-title { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; }
-        .btn-clear { background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; }
-        
-        #terminal-output {
-            flex: 1; padding: 12px 16px; overflow-y: auto; font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; line-height: 1.6; color: #A6ACCD; white-space: pre-wrap; word-wrap: break-word;
-        }
-        .text-sys { color: var(--accent-blue); }
-        .text-err { color: #F07178; }
-        .text-succ { color: #C3E88D; }
-        .text-out { color: #FFFFFF; }
-    </style>
 </head>
 <body>
 
     <!-- Header -->
     <header class="header">
         <div class="brand">
-            <button class="menu-btn" onclick="toggleMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-            </button>
-            <span>Python Pro IDE</span>
+            <button class="menu-btn" onclick="toggleMenu()">☰</button>
+            <span class="brand-title">Ultimate IDE</span>
         </div>
-        <button id="runBtn" class="btn-run" onclick="runCode()" disabled>
-            ⏳ Loading Engine...
-        </button>
+        <button id="runBtn" class="btn-run" onclick="runCode()" disabled>⏳ Loading...</button>
     </header>
 
     <!-- Sidebar & Overlay -->
@@ -181,17 +31,12 @@
     <div class="sidebar" id="sidebar">
         <div class="section-header">
             <span>Explorer</span>
-            <button class="btn-add" onclick="addNewFile()">+ NEW FILE</button>
+            <div class="actions">
+                <button class="icon-btn" onclick="addNewFile()" title="New File">📄+</button>
+                <button class="icon-btn" onclick="addNewFolder()" title="New Folder">📁+</button>
+            </div>
         </div>
-        <ul class="file-list" id="fileList"></ul>
-
-        <div class="gh-box">
-            <div class="section-header" style="padding: 0 0 10px 0; border: none;">☁️ GitHub Sync</div>
-            <input type="text" id="gh-owner" class="gh-input" placeholder="GitHub Username">
-            <input type="text" id="gh-repo" class="gh-input" placeholder="Repository Name">
-            <input type="password" id="gh-token" class="gh-input" placeholder="Personal Access Token">
-            <button class="btn-sync" onclick="pushToGitHub()">Push to GitHub</button>
-        </div>
+        <div class="file-tree" id="fileTree"></div> <!-- Files/Folders will load here -->
     </div>
 
     <!-- Main Workspace -->
@@ -200,214 +45,17 @@
         <div id="editor-container"></div>
     </div>
 
-    <!-- Terminal -->
+    <!-- Terminal / Output -->
     <div class="terminal-container">
         <div class="terminal-header">
-            <span class="term-title">TERMINAL</span>
-            <button class="btn-clear" onclick="document.getElementById('terminal-output').innerHTML=''">CLEAR</button>
+            <span class="term-title" id="output-title">TERMINAL</span>
+            <button class="btn-clear" onclick="clearOutput()">CLEAR</button>
         </div>
-        <div id="terminal-output">
-            <div class="text-sys">Installing Python Environment (~10MB)...</div>
-        </div>
+        <div id="terminal-output"></div>
+        <iframe id="web-preview" class="hidden"></iframe> <!-- For HTML/CSS/JS preview -->
     </div>
 
-    <script>
-        // File System
-        let files = {
-            "main.py": "from utils import greet\n\nprint('--- MAIN APP ---')\nprint(greet('Developer'))\n",
-            "utils.py": "def greet(name):\n    return f'Hello {name}, Welcome to the Premium Web IDE! 🚀'\n",
-            "bot.py": "# Select this tab and click Run\nprint('🤖 Bot is running from bot.py!')\n"
-        };
-        let currentFile = "main.py";
-        let monacoModels = {};
-
-        const terminal = document.getElementById("terminal-output");
-        const runBtn = document.getElementById("runBtn");
-
-        function printTerm(msg, type = "text-out") {
-            const div = document.createElement("div");
-            div.textContent = msg; div.className = type;
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
-        }
-
-        // --- UI Rendering ---
-        function renderUI() {
-            const fileList = document.getElementById('fileList');
-            const fileTabs = document.getElementById('fileTabs');
-            fileList.innerHTML = ''; fileTabs.innerHTML = '';
-
-            Object.keys(files).forEach(filename => {
-                // Sidebar Item
-                let li = document.createElement('li');
-                li.className = `file-item ${filename === currentFile ? 'active' : ''}`;
-                li.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> ${filename}`;
-                li.onclick = () => switchFile(filename);
-                fileList.appendChild(li);
-
-                // Tab Item
-                let tab = document.createElement('div');
-                tab.className = `tab ${filename === currentFile ? 'active' : ''}`;
-                tab.innerHTML = `${filename}`;
-                tab.onclick = () => switchFile(filename);
-                fileTabs.appendChild(tab);
-            });
-
-            // Update Run Button Text
-            if (!runBtn.disabled || runBtn.innerHTML.includes("▶")) {
-                runBtn.innerHTML = `▶ Run ${currentFile}`;
-            }
-        }
-
-        function addNewFile() {
-            let name = prompt("Enter file name (e.g., script.py):");
-            if (name && name.trim() !== '') {
-                if(!name.endsWith('.py')) name += '.py';
-                if (!files[name]) {
-                    files[name] = "# Write your code here\n";
-                    monacoModels[name] = monaco.editor.createModel(files[name], 'python');
-                    switchFile(name);
-                }
-            }
-        }
-
-        function switchFile(filename) {
-            currentFile = filename;
-            editor.setModel(monacoModels[filename]);
-            renderUI();
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
-        }
-
-        // --- Initialize Monaco Editor ---
-        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-        let editor;
-        require(['vs/editor/editor.main'], function() {
-            // Premium Theme
-            monaco.editor.defineTheme('premiumDark', {
-                base: 'vs-dark', inherit: true, rules:[],
-                colors: {
-                    'editor.background': '#0F111A',
-                    'editor.lineHighlightBackground': '#1A1D27',
-                    'editorLineNumber.foreground': '#475569'
-                }
-            });
-
-            Object.keys(files).forEach(filename => {
-                monacoModels[filename] = monaco.editor.createModel(files[filename], 'python');
-            });
-
-            editor = monaco.editor.create(document.getElementById('editor-container'), {
-                model: monacoModels[currentFile],
-                theme: 'premiumDark', automaticLayout: true, wordWrap: 'on', minimap: { enabled: false },
-                lineNumbersMinChars: 3, renderLineHighlight: "all", fontSize: 14, fontFamily: "'JetBrains Mono', monospace",
-                padding: { top: 15 }, contextmenu: false
-            });
-
-            // VERY IMPORTANT: Auto-save code on typing
-            editor.onDidChangeModelContent(() => {
-                files[currentFile] = editor.getValue();
-            });
-
-            renderUI();
-        });
-
-        // --- Initialize Pyodide ---
-        let pyodideReadyPromise;
-        async function initPyodide() {
-            try {
-                let pyodide = await loadPyodide({
-                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
-                    stdout: (text) => printTerm(text, "text-out"),
-                    stderr: (text) => printTerm(text, "text-err")
-                });
-                printTerm("✔ System Ready.", "text-succ");
-                runBtn.innerHTML = `▶ Run ${currentFile}`; 
-                runBtn.disabled = false;
-                return pyodide;
-            } catch(e) { 
-                printTerm("❌ Error loading Environment.", "text-err"); 
-            }
-        }
-        pyodideReadyPromise = initPyodide();
-
-        // --- Run Execution ---
-        async function runCode() {
-            runBtn.innerHTML = "⏳ Running..."; 
-            runBtn.disabled = true;
-            
-            printTerm(`\n$ python ${currentFile}`, "text-sys");
-
-            try {
-                let pyodide = await pyodideReadyPromise;
-                
-                // 1. Sync all files to Pyodide Virtual OS
-                for (const [name, content] of Object.entries(files)) {
-                    pyodide.FS.writeFile(name, content);
-                }
-
-                // 2. Clear Python Cache (Fixes the issue where utils.py didn't update)
-                let clearCacheScript = `
-import sys
-user_files =[f.replace('.py', '') for f in ${JSON.stringify(Object.keys(files))}]
-for m in user_files:
-    if m in sys.modules:
-        del sys.modules[m]
-                `;
-                await pyodide.runPythonAsync(clearCacheScript);
-
-                // 3. RUN CURRENT FILE (Not hardcoded main.py anymore!)
-                await pyodide.runPythonAsync(files[currentFile]);
-
-            } catch (err) {
-                printTerm(err.toString(), "text-err");
-            }
-
-            runBtn.innerHTML = `▶ Run ${currentFile}`; 
-            runBtn.disabled = false;
-        }
-
-        // --- GitHub Upload ---
-        async function pushToGitHub() {
-            const owner = document.getElementById('gh-owner').value.trim();
-            const repo = document.getElementById('gh-repo').value.trim();
-            const token = document.getElementById('gh-token').value.trim();
-
-            if (!owner || !repo || !token) { alert("Please fill GitHub details."); return; }
-
-            printTerm(`\n$ git push to ${owner}/${repo}...`, "text-sys");
-            toggleMenu(); // close sidebar
-
-            for (const [filename, content] of Object.entries(files)) {
-                printTerm(`Uploading ${filename}...`, "text-sys");
-                const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
-                
-                try {
-                    let sha = null;
-                    const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
-                    if (getRes.ok) { sha = (await getRes.json()).sha; }
-
-                    const contentBase64 = btoa(unescape(encodeURIComponent(content))); 
-                    const bodyData = { message: `Update ${filename}`, content: contentBase64 };
-                    if (sha) bodyData.sha = sha;
-
-                    const putRes = await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(bodyData)
-                    });
-
-                    if (putRes.ok) printTerm(`✔ ${filename} uploaded!`, "text-succ");
-                    else printTerm(`❌ Failed ${filename}: ${(await putRes.json()).message}`, "text-err");
-                } catch (error) { printTerm(`❌ Error: ${error.message}`, "text-err"); }
-            }
-            printTerm("✔ Sync Complete!", "text-succ");
-        }
-    </script>
+    <!-- External JS -->
+    <script src="assets/app.js"></script>
 </body>
 </html>
