@@ -67,10 +67,37 @@ function openPreviewInNewTab() {
     const blob = new Blob([htmlContent], { type: 'text/html' }); const url = URL.createObjectURL(blob); window.open(url, '_blank');
 }
 
+// ==========================================
+// 🚀 PYODIDE INITIALIZATION (With Auto-Hide Status)
+// ==========================================
 let pyodideReadyPromise;
 async function initPyodide() {
-    try { let pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/", stdout: printTerm, stderr: (t) => printTerm(t, "text-err") }); document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-check"></i> Python Ready`; return pyodide;
-    } catch (e) { document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-error"></i> Engine Failed`; }
+    try { 
+        let pyodide = await loadPyodide({ 
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/", 
+            stdout: printTerm, 
+            stderr: (t) => printTerm(t, "text-err") 
+        }); 
+        
+        let statusElement = document.getElementById("pyodide-status");
+        statusElement.innerHTML = `<i class="codicon codicon-check"></i> Workspace Ready`;
+        
+        // 3 second baad fade out karega
+        setTimeout(() => {
+            statusElement.style.transition = "opacity 0.5s ease";
+            statusElement.style.opacity = "0";
+            
+            // Text clear kar dega taaki space khali ho jaye
+            setTimeout(() => {
+                statusElement.innerHTML = '';
+                statusElement.style.opacity = "1"; // Next time use ke liye wapas opacity full
+            }, 500);
+        }, 3000);
+
+        return pyodide;
+    } catch (e) { 
+        document.getElementById("pyodide-status").innerHTML = `<i class="codicon codicon-error"></i> Engine Failed`; 
+    }
 }
 pyodideReadyPromise = initPyodide();
 
