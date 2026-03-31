@@ -24,7 +24,6 @@ function renderSnippetList() {
                 let item = document.createElement('div');
                 item.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #2d2d2d; padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; color: #ddd;";
                 
-                // 👇 Yahan maine EDIT (Pencil) icon aur DELETE (Trash) icon dono add kar diye hain
                 item.innerHTML = `
                     <span><span style="color:#569CD6;">[${lang}]</span> <b>${snip.trigger}</b></span> 
                     <div style="display:flex; gap: 12px;">
@@ -38,16 +37,13 @@ function renderSnippetList() {
     });
 }
 
-// 👇 NEW: Edit Snippet Function
 function editSnippet(lang, index) {
     let snippet = userSnippets[lang][index];
     
-    // Values ko wapas input boxes mein daal do
     document.getElementById('snip-lang').value = lang;
     document.getElementById('snip-trigger').value = snippet.trigger;
     document.getElementById('snip-code').value = snippet.code;
     
-    // Taaki user ko pata chale ki wo ab update kar raha hai
     document.querySelector('#snippet-modal .btn-confirm').innerText = "Update Snippet";
 }
 
@@ -64,14 +60,11 @@ function saveCustomSnippet() {
 
     let existsIndex = userSnippets[lang].findIndex(s => s.trigger === trigger);
     
-    // Agar snippet pehle se hai toh sirf uska code update hoga
     if(existsIndex !== -1) userSnippets[lang][existsIndex].code = code; 
-    // Agar naya hai toh list mein add ho jayega
     else userSnippets[lang].push({ trigger: trigger, code: code }); 
 
     saveSnippetsToStorage();
     
-    // Box clear karo aur button ka naam wapas "Save" kar do
     document.getElementById('snip-trigger').value = ''; 
     document.getElementById('snip-code').value = '';
     document.querySelector('#snippet-modal .btn-confirm').innerText = "Save Snippet";
@@ -86,12 +79,13 @@ function deleteSnippet(lang, index) {
 }
 
 // =========================================================================
-// Monaco Editor Snippet Loader
+// 🚀 MAIN FIX: Added "Range" logic for strict languages like HTML & Python
 // =========================================================================
 let providersRegistered = false;
 
 function initMonacoSnippets() {
-    if (typeof monaco === 'undefined') {
+    // Wait until monaco is fully loaded and languages API is available
+    if (typeof monaco === 'undefined' || !monaco.languages) {
         setTimeout(initMonacoSnippets, 500);
         return;
     }
@@ -101,6 +95,16 @@ function initMonacoSnippets() {
     ['html', 'css', 'javascript', 'python'].forEach(lang => {
         monaco.languages.registerCompletionItemProvider(lang, {
             provideCompletionItems: function(model, position) {
+                
+                // 🛠️ FIX: Current word aur cursor ki position calculate karo
+                let word = model.getWordUntilPosition(position);
+                let range = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: word.startColumn,
+                    endColumn: word.endColumn
+                };
+
                 let snippets = userSnippets[lang] || [];
                 
                 let suggestions = snippets.map(snip => {
@@ -109,7 +113,8 @@ function initMonacoSnippets() {
                         kind: monaco.languages.CompletionItemKind.Snippet,
                         insertText: snip.code,
                         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        documentation: "RC Custom Snippet (" + lang.toUpperCase() + ")"
+                        documentation: "RC Custom Snippet (" + lang.toUpperCase() + ")",
+                        range: range // 👈 YE SABSE IMPORTANT THA (Iske bina HTML/Python ignore kar dete the)
                     };
                 });
 
@@ -119,7 +124,7 @@ function initMonacoSnippets() {
     });
 
     providersRegistered = true;
-    console.log("✅ Monaco Custom Snippets Successfully Loaded!");
+    console.log("✅ Monaco Custom Snippets Successfully Loaded with Range Fix!");
 }
 
 initMonacoSnippets();
