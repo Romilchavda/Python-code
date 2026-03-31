@@ -74,7 +74,56 @@
         </div>
     </div>
     
-    <!-- Mobile Sidebar Overlay -->
+    <!-- ⚙️ NEW: SETTINGS MODAL (Yahan paste kiya hai) -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-box" style="width: 90%; max-width: 400px;">
+            <div class="modal-header">Editor Settings</div>
+            <div class="modal-body" style="text-align: left; display: flex; flex-direction: column; gap: 15px;">
+                
+                <!-- Theme -->
+                <div>
+                    <label style="color: #ccc; font-size: 13px;">Theme</label>
+                    <select id="set-theme" class="modal-input" style="width: 100%; padding: 8px; margin-top: 5px; background: #2d2d2d; color: white; border: 1px solid #444;">
+                        <option value="vs-dark">Dark (Default)</option>
+                        <option value="vs">Light</option>
+                        <option value="hc-black">High Contrast Dark</option>
+                    </select>
+                </div>
+                
+                <!-- Font Size -->
+                <div>
+                    <label style="color: #ccc; font-size: 13px;">Font Size (px)</label>
+                    <input type="number" id="set-fontsize" class="modal-input" style="width: 100%; margin-top: 5px; background: #2d2d2d; color: white; border: 1px solid #444;" value="14" min="10" max="30">
+                </div>
+                
+                <!-- Word Wrap -->
+                <div>
+                    <label style="color: #ccc; font-size: 13px;">Word Wrap</label>
+                    <select id="set-wordwrap" class="modal-input" style="width: 100%; padding: 8px; margin-top: 5px; background: #2d2d2d; color: white; border: 1px solid #444;">
+                        <option value="off">Off (Scroll Horizontally)</option>
+                        <option value="on">On (Wrap to next line)</option>
+                    </select>
+                </div>
+                
+                <!-- Minimap -->
+                <div>
+                    <label style="color: #ccc; font-size: 13px;">Minimap (Code Map)</label>
+                    <select id="set-minimap" class="modal-input" style="width: 100%; padding: 8px; margin-top: 5px; background: #2d2d2d; color: white; border: 1px solid #444;">
+                        <option value="true">Show</option>
+                        <option value="false">Hide</option>
+                    </select>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+                <button class="btn-confirm" onclick="saveSettings()">Save & Apply</button>
+            </div>
+        </div>
+    </div>
+    <!-- SETTINGS MODAL KHATAM -->
+    
+    <!-- Mobile Sidebar Overlay (Ye pehle se tha) -->
     <div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
     
     <!-- Top Header -->
@@ -103,7 +152,11 @@
                 <!-- 🚀 NEW: SNIPPET MANAGER BUTTON -->
                 <i class="codicon codicon-symbol-snippet icon-btn" onclick="openSnippetManager()" title="Custom Snippets" style="margin-top: 15px; cursor: pointer; color: #8b949e;"></i>
             </div>
-            <div class="act-bottom"></div>
+            <div class="act-bottom">
+                <!-- ⚙️ SETTINGS ICON -->
+                <i class="codicon codicon-settings-gear icon-btn" onclick="openSettings()" title="Settings" style="margin-bottom: 15px; cursor: pointer; color: #8b949e;"></i>
+            </div>
+            
         </div>
         
         <!-- Sidebar (Explorer) -->

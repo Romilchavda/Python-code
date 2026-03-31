@@ -146,3 +146,74 @@ function toggleSidebar() { let s = document.getElementById('sidebar'), o = docum
 window.addEventListener('resize', () => { let s = document.getElementById('sidebar'), o = document.getElementById('mobile-overlay'); if (window.innerWidth > 768) { s.classList.remove('mobile-active'); o.classList.remove('active'); s.style.display = 'flex'; document.getElementById('resizer-v').style.display = 'block'; } else { s.style.display = ''; document.getElementById('resizer-v').style.display = ''; } if (editor) setTimeout(() => editor.layout(), 100); });
 let isResizingV = false; document.getElementById('resizer-v').addEventListener('mousedown', () => { isResizingV = true; document.body.style.cursor = 'col-resize'; }); document.addEventListener('mousemove', (e) => { if (isResizingV) { let w = e.clientX - 48; if (w > 150 && w < 500) document.getElementById('sidebar').style.width = w + 'px'; } }); document.addEventListener('mouseup', () => { if (isResizingV) { isResizingV = false; document.body.style.cursor = 'default'; if (editor) editor.layout(); } });
 let isResizingH = false; document.getElementById('resizer-h').addEventListener('mousedown', () => { isResizingH = true; document.body.style.cursor = 'row-resize'; }); document.addEventListener('mousemove', (e) => { if (isResizingH) { let h = window.innerHeight - e.clientY - 22; if (h > 100 && h < window.innerHeight * 0.8) document.getElementById('terminal-container').style.height = h + 'px'; } }); document.addEventListener('mouseup', () => { if (isResizingH) { isResizingH = false; document.body.style.cursor = 'default'; if (editor) editor.layout(); } });
+
+// ==========================================
+// ⚙️ EDITOR SETTINGS LOGIC
+// ==========================================
+
+// Default Settings
+const defaultSettings = {
+    theme: "vs-dark",
+    fontSize: 14,
+    wordWrap: "off",
+    minimap: false // Mobile/Web ke liye minimap default off rakhna better hai
+};
+
+// Load settings from LocalStorage
+let userSettings = JSON.parse(localStorage.getItem('rc_editor_settings')) || defaultSettings;
+
+// Modal Open/Close Functions
+function openSettings() {
+    // Current settings ko Modal inputs me set karo
+    document.getElementById('set-theme').value = userSettings.theme;
+    document.getElementById('set-fontsize').value = userSettings.fontSize;
+    document.getElementById('set-wordwrap').value = userSettings.wordWrap;
+    document.getElementById('set-minimap').value = userSettings.minimap.toString();
+    
+    document.getElementById('settings-modal').classList.add('active');
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('active');
+}
+
+// Save & Apply Settings
+function saveSettings() {
+    // Modal se nayi values lo
+    userSettings.theme = document.getElementById('set-theme').value;
+    userSettings.fontSize = parseInt(document.getElementById('set-fontsize').value);
+    userSettings.wordWrap = document.getElementById('set-wordwrap').value;
+    userSettings.minimap = document.getElementById('set-minimap').value === "true";
+
+    // LocalStorage me save karo
+    localStorage.setItem('rc_editor_settings', JSON.stringify(userSettings));
+    
+    // Monaco editor me apply karo
+    applySettingsToEditor();
+    
+    closeSettings();
+}
+
+// Ye function actual Monaco Editor ka roop badalta hai
+function applySettingsToEditor() {
+    if (typeof monaco !== 'undefined') {
+        // Theme Update
+        monaco.editor.setTheme(userSettings.theme);
+        
+        // Agar aapke paas global 'editor' variable hai (jo Monaco init ke baad banta hai)
+        // Ye sabhi khule hue editors (tabs) ki settings update kar dega
+        const allEditors = monaco.editor.getEditors();
+        allEditors.forEach(ed => {
+            ed.updateOptions({
+                fontSize: userSettings.fontSize,
+                wordWrap: userSettings.wordWrap,
+                minimap: { enabled: userSettings.minimap }
+            });
+        });
+    }
+}
+
+// Jab page load ho, toh 2 second baad Monaco check karke apply kar do
+setTimeout(() => {
+    applySettingsToEditor();
+}, 2000);
